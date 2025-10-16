@@ -25,7 +25,7 @@ rarity_colors = {
 # Set the application avatar link here
 application_avatar = "https://raw.githubusercontent.com/harpoonwithaz/zr_store_checker_webhook/refs/heads/main/assets/webhook_logo.png"
 
-def get_api_data(api_url) -> dict:
+def get_api_data(api_url):
     print(f'Sending API request to {api_url}')
     response = requests.get(api_url)
     print(f'API Response: "{response}"')
@@ -38,12 +38,13 @@ def get_item_rarity(item_sku):
     try:
         data = get_api_data(items_url)
 
-        for skin in data['items']:
-            if skin['sku'] == item_sku:
-                return skin['rarity']
-        else:
-            print(f'There was not a skin with the SKU {item_sku} found')
-            return None
+        if data:
+            for skin in data['items']:
+                if skin['sku'] == item_sku:
+                    return skin['rarity']
+            else:
+                print(f'There was not a skin with the SKU {item_sku} found')
+                return None
     except Exception as e:
         print(f'There was an error in obtaining the item rarity: {e}')
         return None
@@ -67,7 +68,7 @@ def create_embed(api_data) -> list:
 
         # Obtains skin rarity info from other API, sets embed color to corresponding rarity
         skin_rarity = get_item_rarity(skin_sku)
-        if skin_rarity in rarity_colors.keys():
+        if skin_rarity and skin_rarity in rarity_colors.keys():
             embed_color = rarity_colors[skin_rarity]
         else:
             embed_color = 197379
@@ -105,7 +106,7 @@ def create_embed(api_data) -> list:
     # Returns the list of embeds
     return embeds
 
-def send_to_discord(msg: str, webhook_username: str = 'Webhook', embed: bool = False, embed_msg: str = ''):
+def send_to_discord(msg: str, webhook_username: str = 'Webhook', embed: bool = False, embed_msg= []):
     # Message payload for discord
     payload = {
         "content" : msg,
@@ -129,8 +130,10 @@ def main():
         date = datetime.datetime.now()
         message = f'@everyone\n# ZombsRoyale daily vaulted goods\nFor **`{date.strftime('%x')}`** at **`{date.strftime('%X')}`**'
 
+        print(type(embeds))
+
         #send_to_discord(msg='@everyone', webhook_username='Daily Store Update', embed=True, embed_msg=embeds)
-        send_to_discord(msg = message, webhook_username='Daily Store Update', embed = True, embed_msg = embeds[:10])
+        send_to_discord(msg = message, webhook_username='Daily Store Update', embed = True, embed_msg = embeds)
 
         print(f'Message successfully sent to discord webhook: {webhook_url}')
     except Exception as e:

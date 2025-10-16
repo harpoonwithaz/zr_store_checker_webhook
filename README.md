@@ -1,4 +1,4 @@
-# zr_store_checker_webhook
+# ZombsRoyale.io Daily Store Checker Webhook
 
 ## To do
 

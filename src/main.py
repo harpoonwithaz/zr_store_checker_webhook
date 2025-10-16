@@ -7,7 +7,7 @@ import requests
 import datetime
 
 # Webhook URL
-webhook_url = 'https://discord.com/api/webhooks/1418118365234335764/-sxyQ3b-9aJiZJw5svbzrIFCZcHkWepVDRvVlxafct4cKbcHlrcFyadrqpmk23BpxIj1'
+webhook_url = 
 
 # apis
 api = 'https://zombsroyale.io/api/shop/available?userKey&sections='

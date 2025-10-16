@@ -3,4 +3,4 @@
 ## To do
 
 - [x] Add core functionality
-- [] Create a banner
+- [ ] Create a banner

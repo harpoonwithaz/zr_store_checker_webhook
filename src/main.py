@@ -5,9 +5,12 @@
 # Module Imports
 import requests
 import datetime
+import os
+from dotenv import load_dotenv
 
-# Webhook URL
-webhook_url = 
+# load url from safe file
+load_dotenv()
+webhook_url = os.getenv('TESTING_WEBHOOK_URL')
 
 # apis
 api = 'https://zombsroyale.io/api/shop/available?userKey&sections='
@@ -120,8 +123,10 @@ def send_to_discord(msg: str, webhook_username: str = 'Webhook', embed: bool = F
         # for all params, see https://discordapp.com/developers/docs/resources/channel#embed-object
         payload["embeds"] = embed_msg[:10] # slice to avoid >10 error
     
+    
     # Sends to discord
-    requests.post(webhook_url, json = payload)
+    if webhook_url:
+        requests.post(webhook_url, json = payload)
 
 def main():
     try:
@@ -129,8 +134,6 @@ def main():
         embeds = create_embed(timed_deals)
         date = datetime.datetime.now()
         message = f'@everyone\n# ZombsRoyale daily vaulted goods\nFor **`{date.strftime('%x')}`** at **`{date.strftime('%X')}`**'
-
-        print(type(embeds))
 
         #send_to_discord(msg='@everyone', webhook_username='Daily Store Update', embed=True, embed_msg=embeds)
         send_to_discord(msg = message, webhook_username='Daily Store Update', embed = True, embed_msg = embeds)

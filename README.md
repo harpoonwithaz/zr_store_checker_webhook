@@ -2,4 +2,5 @@
 
 ## To do
 
--[] Create a banner
+- [x] Add core functionality
+- [] Create a banner

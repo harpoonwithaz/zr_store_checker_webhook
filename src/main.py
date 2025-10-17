@@ -17,7 +17,7 @@ api = 'https://zombsroyale.io/api/shop/available?userKey&sections='
 items_url = f'{api}items'
 timed_deals_url = f'{api}timedDeals'
 
-# Rarities and there
+# Rarities and their colors
 rarity_colors = {
     'Mythic': 15028046,
     'Legendary': 16549180,

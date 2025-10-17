@@ -36,23 +36,16 @@ def get_api_data(api_url):
         data = response.json()
         return data
 
-def get_item_rarity(item_sku):
-    print(f'Obtaining info for {item_sku}...')
-    try:
-        data = get_api_data(items_url)
+def get_item_rarity(data, item_sku):
+    if data:
+        for skin in data['items']:
+            if skin['sku'] == item_sku:
+                return skin['rarity']
+        else:
+            print(f'There was not a skin with the SKU {item_sku} found')
+            return None
 
-        if data:
-            for skin in data['items']:
-                if skin['sku'] == item_sku:
-                    return skin['rarity']
-            else:
-                print(f'There was not a skin with the SKU {item_sku} found')
-                return None
-    except Exception as e:
-        print(f'There was an error in obtaining the item rarity: {e}')
-        return None
-
-def create_embed(api_data) -> list:
+def create_embed(timed_deals_data, item_info_data) -> list:
     '''Creates a list of formatted embed messages to be sent to discord.
     Parameters:
     - api_data: raw json data from the api
@@ -60,7 +53,7 @@ def create_embed(api_data) -> list:
 
     embeds = []
     skin_count = 1
-    for skin in api_data['timedDeals']:
+    for skin in timed_deals_data['timedDeals']:
         # Formats for simplicity purposes
         skin_name = skin['name']
         skin_sku = skin['rewards'][0]['itemSku']
@@ -69,8 +62,8 @@ def create_embed(api_data) -> list:
         skin_expires = skin['expires']['date'].split(' ') # First item contains date and second item contains time 
         skin_expires_timezone = skin['expires']['timezone']
 
-        # Obtains skin rarity info from other API, sets embed color to corresponding rarity
-        skin_rarity = get_item_rarity(skin_sku)
+        # Obtains skin rarity info from data from api, sets embed color to corresponding rarity
+        skin_rarity = get_item_rarity(item_info_data, skin_sku)
         if skin_rarity and skin_rarity in rarity_colors.keys():
             embed_color = rarity_colors[skin_rarity]
         else:
@@ -96,7 +89,7 @@ def create_embed(api_data) -> list:
             }
 
         # Checks if it is the last embed and adds footer field
-        if skin_count == len(api_data['timedDeals']):
+        if skin_count == len(timed_deals_data['timedDeals']):
             embed["footer"] = {
                 "text": "Made using zombsroyale.io API",
                 "icon_url": "https://bracketfights.com/images/hero/2019/zombsroyale-afro-tournament-9827/1603079365.png"
@@ -109,7 +102,7 @@ def create_embed(api_data) -> list:
     # Returns the list of embeds
     return embeds
 
-def send_to_discord(msg: str, webhook_username: str = 'Webhook', embed: bool = False, embed_msg= []):
+def send_to_discord(msg: str, webhook_username: str = 'Webhook', embed_msg= []):
     # Message payload for discord
     payload = {
         "content" : msg,
@@ -118,9 +111,7 @@ def send_to_discord(msg: str, webhook_username: str = 'Webhook', embed: bool = F
     }
 
     # If an embed is passed in
-    if embed:
-        # leave this out if you dont want an embed
-        # for all params, see https://discordapp.com/developers/docs/resources/channel#embed-object
+    if embed_msg:
         payload["embeds"] = embed_msg[:10] # slice to avoid >10 error
     
     
@@ -130,13 +121,16 @@ def send_to_discord(msg: str, webhook_username: str = 'Webhook', embed: bool = F
 
 def main():
     try:
-        timed_deals = get_api_data(timed_deals_url)
-        embeds = create_embed(timed_deals)
+        timed_deals = get_api_data(timed_deals_url) # Obtains timed deals data from api
+        item_data = get_api_data(items_url) # Obtains data on every cosmetic from api
+        
+        # Creates an a message for discord
+        embeds = create_embed(timed_deals, item_data)
         date = datetime.datetime.now()
         message = f'@everyone\n# ZombsRoyale daily vaulted goods\nFor **`{date.strftime('%x')}`** at **`{date.strftime('%X')}`**'
 
-        #send_to_discord(msg='@everyone', webhook_username='Daily Store Update', embed=True, embed_msg=embeds)
-        send_to_discord(msg = message, webhook_username='Daily Store Update', embed = True, embed_msg = embeds)
+        # Sends the message to the discord webhook
+        send_to_discord(msg = message, webhook_username='Daily Store Update', embed_msg = embeds)
 
         print(f'Message successfully sent to discord webhook: {webhook_url}')
     except Exception as e:

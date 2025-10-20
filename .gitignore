@@ -1,3 +1,8 @@
 .env
 
 test.py
+
+/assets/assets
+
+.vscode
+__pycache__

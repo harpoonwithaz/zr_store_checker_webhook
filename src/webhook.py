@@ -6,16 +6,21 @@
 import requests
 import datetime
 import os
+import time
 from dotenv import load_dotenv
 
-# load url from safe file
+# Local imports
+from api_modules.imgbb_api import upload_IMG
+from api_modules.zr_api import get_json
+from assets import get_skin_path
+
+# load url and api key from safe file
 load_dotenv()
 webhook_url = os.getenv('TESTING_WEBHOOK_URL')
+imgbb_api_key = os.getenv('IMGBB_API_KEY')
 
 # apis
-api = 'https://zombsroyale.io/api/shop/available?userKey&sections='
-items_url = f'{api}items'
-timed_deals_url = f'{api}timedDeals'
+zr_api = 'https://zombsroyale.io/api/shop/available?userKey&sections='
 
 # Rarities and their colors
 rarity_colors = {
@@ -27,14 +32,6 @@ rarity_colors = {
 
 # Set the application avatar link here
 application_avatar = "https://raw.githubusercontent.com/harpoonwithaz/zr_store_checker_webhook/refs/heads/main/assets/webhook_logo.png"
-
-def get_api_data(api_url):
-    print(f'Sending API request to {api_url}')
-    response = requests.get(api_url)
-    print(f'API Response: "{response}"')
-    if response.status_code == 200:
-        data = response.json()
-        return data
 
 def get_item_rarity(data, item_sku):
     if data:
@@ -61,6 +58,8 @@ def create_embed(timed_deals_data, item_info_data) -> list:
         skin_cost = skin['cost_gems']
         skin_expires = skin['expires']['date'].split(' ') # First item contains date and second item contains time 
         skin_expires_timezone = skin['expires']['timezone']
+        
+        
 
         # Obtains skin rarity info from data from api, sets embed color to corresponding rarity
         skin_rarity = get_item_rarity(item_info_data, skin_sku)
@@ -79,6 +78,18 @@ def create_embed(timed_deals_data, item_info_data) -> list:
             Expires: **`{skin_expires[0]}`** at **`{skin_expires[1].split('.')[0]} {skin_expires_timezone}`**""",
             "color": embed_color
             }
+        
+        # Obtains the asset file and uploads it to imgbb
+        skin_asset_path = get_skin_path(skin_sku) # Gets the path to where the skin asset file is located
+        
+        # Once the asset file is found it uploads it and sets the embed thumbnail to the url
+        if skin_asset_path and imgbb_api_key:
+            thumbnail_url = upload_IMG(img_location=skin_asset_path, api_key=imgbb_api_key, img_name=skin_sku)
+            # Checks if a thumbnail image was passed in, and adds that image as thumbnail in the embed
+            if thumbnail_url:
+                embed["thumbnail"] = {'url': f'{thumbnail_url}'}
+            else:
+                embed["description"] = f'{embed["description"]}\n**There is no image preview available for this skin**'
         
         # Checks if it is the first embed and adds the author field
         if skin_count == 1:
@@ -120,10 +131,11 @@ def send_to_discord(msg: str, webhook_username: str = 'Webhook', embed_msg= []):
         requests.post(webhook_url, json = payload)
 
 def main():
+    start_time = time.time()
     try:
-        timed_deals = get_api_data(timed_deals_url) # Obtains timed deals data from api
-        item_data = get_api_data(items_url) # Obtains data on every cosmetic from api
-        
+        timed_deals = get_json(f'{zr_api}timedDeals') # Obtains timed deals data from api
+        item_data = get_json(f'{zr_api}items') # Obtains data on every cosmetic from api
+
         # Creates an a message for discord
         embeds = create_embed(timed_deals, item_data)
         date = datetime.datetime.now()
@@ -135,6 +147,10 @@ def main():
         print(f'Message successfully sent to discord webhook: {webhook_url}')
     except Exception as e:
         print(f'There was an error in sending the message: {e}')
+    
+    end_time = time.time()
+    execution_time = end_time - start_time
+    print(f"Execution time: {execution_time:.4f} seconds")
 
 if __name__ == '__main__':
     main()

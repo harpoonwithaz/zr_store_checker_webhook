@@ -1,8 +1,10 @@
 .env
 
 test.py
+test2.py
 
-/assets/assets
+/assets/game_assets
+logs
 
 .vscode
 __pycache__

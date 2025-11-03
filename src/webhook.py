@@ -18,7 +18,7 @@ from assets import get_item_path_mobile
 
 # load url and api key from env file
 load_dotenv()
-webhook_url = os.getenv('TESTING_WEBHOOK_URL')
+webhook_url = os.getenv('WEBHOOK_URL')
 imgbb_api_key = os.getenv('IMGBB_API_KEY')
 
 # apis

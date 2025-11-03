@@ -20,6 +20,12 @@ None of the official zombsroyale game assets are used in this project. All the g
 - Robust retry/backoff logic for API failures and webhook posting with error logging.
 - Separate logs for errors and successful sends: `logs/errors.log` and `logs/sent.log`.
 
+## Running the script
+
+```bash
+python webhook.py
+```
+
 ## Logging
 
 The application writes two log files under `logs/` (created automatically):
